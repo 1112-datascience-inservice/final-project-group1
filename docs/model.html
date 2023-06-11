@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<!--
+	Future Imperfect by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+	https://html5up.net/future-imperfect
+-->
+<html>
+	<head>
+		<title>Data Science Final Project</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+	</head>
+	<body class="is-preload">
+		<!-- Wrapper -->
+			<div id="wrapper">
+				<!-- Header -->
+					<header id="header">
+						<h1><a href="#">期末報告 Group 1</a></h1>
+						<nav class="links">
+							<ul>
+								<li><a href="index.html">背景介紹(Backgroud)</a></li>
+								<li><a href="eda.html">探索性資料分析(EDA)</a></li>
+								<li><a href="feature.html">特徵提取(Feature extraction)</a></li>
+								<li><a href="model.html" class="selected">建立模組(Modeling)</a></li>
+								<li><a href="demo.html">實際演練(Demo)</a></li>
+								<li><a href="reference.html">參考資料(Reference)</a></li>
+							</ul>
+						</nav>
+					</header>
+				<!-- Main -->
+				<div id="main" style="margin-left: 22em;">
+					<a name="Section1"></a>
+					<article class="post">
+						<header>
+							<div class="title">
+								<h2>設定K-fold</h2>
+							</div>
+						</header>
+						<h2 class="article_head">
+							設定訓練模組為5-fold，進行交叉驗證
+						</h2>
+						<div class="article_code">
+							ctrl <- trainControl(method = "cv", number = 5, savePredictions = "all", classProbs = TRUE)<br/>
+						</div><br/>
+					</article>
+					<a name="Section2"></a>
+					<article class="post">
+						<header>
+							<div class="title">
+								<h2>建立訓練模組</h2>
+							</div>
+						</header>
+						<h3 class="article_head">
+							利用下列6種模型來訓練並進行比較
+							<ul>
+								<li>Logistic regression</li>
+								<li>K nearest neighbors</li>
+								<li>SVC Linear</li>
+								<li>Gaussian Naive Bayes</li>
+								<li>Decision Tree</li>
+								<li>Random Forest Classifier</li>
+							</ul>
+						</h3>
+						<img src="images/model_code_01.png" style="width: 100%;"><br/><br/>
+					</article>
+					
+					<a name="Section3"></a>
+					<article class="post">
+						<header>
+							<div class="title">
+								<h2>訓練</h2>
+							</div>
+						</header>
+						<h2 class="article_head">
+							將訓練資料進行切分，80%作為訓練資料集，10%作為測試資料集，10%為驗證資料集。
+						</h2>
+						<div class="article_code">
+							res_predictions <- predict(Training_model, newdata = data)<br/>
+							res_accuracy <- sum(res_predictions == train_data$Survived) / nrow(train_data)<br/>
+							<span class="comment_code"># Compute confusion metrics</span><br/>
+							res_confusion <- confusionMatrix(res_predictions, train_data$Survived)$table<br/>
+							<span class="comment_code"># Calculate F1 score, precision, and recall</span><br/>
+							tp <- res_confusion[2, 2]<br/>
+							fp <- res_confusion[1, 2]<br/>
+							fn <- res_confusion[2, 1]<br/><br/>
+
+							res_precision <- tp / (tp + fp)<br/>
+							res_recall <- tp / (tp + fn)<br/>
+							res_f1_score <- (2 * res_precision * res_recall) / (res_precision + res_recall)<br/><br/>
+							
+							<span class="comment_code"># Compute ROC AUC value</span><br/>
+							res_predictions_prob <- predict(Training_model, newdata = train_data, type = "prob")[, 2]<br/>
+							roc_obj <- roc(train_data$Survived, res_predictions_prob, quiet=TRUE)<br/>
+							res_auc <- roc_obj$auc<br/><br/>
+							
+							predInfo <- c(accuracy = round(res_accuracy, digits = 4) , F1 = round(res_f1_score, digits = 4), precision = round(res_precision, digits = 4), recall = round(res_recall, digits = 4), auc = round(res_auc, digits = 4))<br/>
+							
+						</div><br/>
+						<div class="article_comment">
+							計算各個模組在不同資料集中的<b>Accuracy, F1 score, Precision, Recall</b>和<b>ACU ROC</b>的數值
+						</div>
+					</article>
+
+					<a name="Section4"></a>
+					<article class="post">
+						<header>
+							<div class="title">
+								<h2>進行預測</h2>
+							</div>
+						</header>
+						<h2 class="article_head">
+							使用測試資料進行預測，並將結果輸出成CSV檔<br/>
+						</h2>
+						<div class="article_code">
+							res_predictions <- predict(Training_model, newdata = test_data)<br/>
+							<span class="comment_code"># Create predictions data frame</span><br/>
+							dimensions <- dim(test_data)<br/>
+							ids <- 0:(dimensions[1] - 1)<br/>
+							predictions <- data.frame(Id = ids, Probability = res_predictions)<br/><br/>
+
+							<span class="comment_code"># Define output file path</span><br/>
+							output_file <- paste("predictions/", model_name, " prediction.csv", sep = "")<br/>
+							out_f_path <- dirname(output_file)<br/><br/>
+
+							<span class="comment_code"># Create output directory if it doesn't exist</span><br/>
+							if (!dir.exists(out_f_path)) {<br/>
+								&nbsp;&nbsp;&nbsp;&nbsp;dir.create(out_f_path, recursive = TRUE)<br/>
+							}<br/>
+
+							print(sprintf("Write predictions to CSV file. Path : %s ", output_file))<br/>
+							write.csv(predictions, file = output_file, row.names = FALSE)_precision, digits = 4), recall = round(res_recall, digits = 4), auc = round(res_auc, digits = 4))<br/><br/>
+						</div><br/>
+						<div class="article_comment">
+							CSV檔案會存放在<b>predictions</b>資料夾下，檔名為<b>模組名稱 prediction.csv</b>
+						</div>
+					</article>
+
+					<a name="Section5"></a>
+					<article class="post">
+						<header>
+							<div class="title">
+								<h2>列出結果</h2>
+							</div>
+						</header>
+						<img src="images/model_01.png" style="width: 100%;"><br/><br/>
+						<div class="article_comment">
+							從結果來看<b>Gaussian Naive Bayes</b>和<b>Random Forest Classifier</b>的模組預測較好
+						</div>
+					</article>
+					
+					<a name="Section6"></a>
+					<article class="post">
+						<header>
+							<div class="title">
+								<h2>實際演練</h2>
+							</div>
+						</header>
+						<article class="post">
+							<header>
+								<div class="title">
+									<h2><a href="https://nccueric.shinyapps.io/demo2/" target="_blank">Demo</a></h2>
+								</div>
+							</header>
+							<iframe 
+							src="https://nccueric.shinyapps.io/demo2/"
+							width="100%"
+							height="800px"
+							>
+						</iframe>
+						</article>
+					</article>					
+				</div>
+				<!-- Sidebar -->
+				<section id="sidebar" style="position: fixed;left: 6em;">
+					<!-- Posts List -->
+						<section>
+							<ul class="posts">
+								<li>
+									<article><header><h3><a href="#Section1">利用K-fold進行訓練</a></h3></header></article>
+								</li>
+								<li>
+									<article><header><h3><a href="#Section2">建立訓練模組</a></h3></header></article>
+								</li>
+								<li>
+									<article><header><h3><a href="#Section3">訓練</a></h3></header></article>
+								</li>
+								<li>
+									<article><header><h3><a href="#Section4">進行預測</a></h3></header></article>
+								</li>
+								<li>
+									<article><header><h3><a href="#Section5">列出結果</a></h3></header></article>
+								</li>
+								<li>
+									<article><header><h3><a href="#Section6">實際演練</a></h3></header></article>
+								</li>
+							</ul>
+						</section>
+				</section>
+			</div>
+
+	</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE HTML>
+<!--
+	Future Imperfect by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+	https://html5up.net/future-imperfect
+-->
+<html>
+	<head>
+		<title>Data Science Final Project</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+	</head>
+	<body class="is-preload">
+		<!-- Wrapper -->
+			<div id="wrapper">
+				<!-- Header -->
+					<header id="header">
+						<h1><a href="#">期末報告 Group 1</a></h1>
+						<nav class="links">
+							<ul>
+								<li><a href="index.html">背景介紹(Backgroud)</a></li>
+								<li><a href="eda.html">探索性資料分析(EDA)</a></li>
+								<li><a href="feature.html" class="selected">特徵提取(Feature extraction)</a></li>
+								<li><a href="model.html">建立模組(Modeling)</a></li>
+								<li><a href="demo.html">實際演練(Demo)</a></li>
+								<li><a href="reference.html">參考資料(Reference)</a></li>
+							</ul>
+						</nav>
+					</header>
+				<!-- Main -->
+				<div id="main" style="margin-left: 22em;">
+					<a name="Section1"></a>
+					<article class="post">
+						<header>
+							<div class="title">
+								<h2>Missing data</h2>
+							</div>
+						</header>
+						<h2 class="article_head">
+							①　確認有無Missing data
+						</h2>
+						<div class="article_code">
+							sapply(Titanic, function(x) sum(is.na(x)))
+						</div><br/>
+						<table>
+							<tr>
+								<th>PassengerId</th>
+								<th>Survived</th>
+								<th>Pclass</th>
+								<th>Name</th>
+								<th>Sex</th>
+								<th>Age</th>
+								<th>SibSp</th>
+								<th>Parch</th>
+								<th>Ticket</th>
+								<th>Fare</th>
+								<th>Cabin<br/>(房間號碼)</th>
+								<th>Embarked<br/>(出發港口)</th>
+							</tr>
+							<tr>
+								<td>0</td>
+								<td>0</td>
+								<td>0</td>
+								<td>0</td>
+								<td>0</td>
+								<td>177</td>
+								<td>0</td>
+								<td>0</td>
+								<td>0</td>
+								<td>0</td>
+								<td>687</td>
+								<td>2</td>
+							</tr>
+						</table>
+						<div class="article_comment">
+							發現<b>Age</b>、<b>Cabin</b>(房間號碼)與<b>Embarked</b>(出發港口)三個欄位都有missing data，其中<b>Cabin</b>(房間號碼)有687筆missing data。
+						</div>
+						
+						<hr>
+
+						<h2 class="article_head">
+							②　Drop不必要欄位
+						</h2>
+						●　PassengerId、Name、Ticket等欄位對於是否存活沒有影響， 且Cabin(房間號碼)的missing data過多，因此選擇將這些欄位刪除。<br/>
+						●　再來，將Embarked(出發港口)和Age的資料中有missing data的資料刪除 <br/>
+						
+						<div class="article_code">
+							Titanic_train <- subset(Titanic, select = -c(PassengerId, Name, Ticket, Cabin)) <br/>
+							Titanic_train <- Titanic_train[complete.cases(Titanic_train[,c("Embarked","Age")]),]
+						</div><br/>
+							查看刪除missing data後，剩下多少資料 <br/>
+						<div class="article_code">
+							dimensions <- dim(Titanic_train) <br/>
+							num_rows <- dimensions[1]  # 行数 <br/>
+							num_cols <- dimensions[2]  # 列数 <br/>
+							cat("row:",num_rows,"\n","col:",num_cols,"\n")
+						</div><br/>
+						<table>
+							<tr>
+								<th>Rows</th>
+								<th>Columns</th>
+							</tr>
+							<tr>
+								<td>712 (data)</td>
+								<td>8 (feature)</td>
+							</tr>
+						</table>
+						<div class="article_comment">
+							刪除後的資料剩下<b>712</b>筆資料和<b>8</b>欄feature。
+						</div>		
+					</article>
+
+					<a name="Section2"></a>
+					<article class="post">
+						<header>
+							<div class="title">
+								<h2>Label encoding</h2>
+							</div>
+						</header>
+						<h2 class="article_head">
+							①　確認8欄feature的資料型態 	
+						</h2>
+						<div class="article_code">
+							str(Titanic_train)
+						</div><br/>
+						<img src="images/feature_01.png" style="width: 500px;"><br/><br/>
+						<div class="article_comment">
+							<b>Sex</b>和<b>Embarked(出發港口)</b>不是的數值型的資料，因此需要進行encode。
+						</div>
+
+						<hr>
+						
+						<h2 class="article_head">
+							②　查看「Sex」欄位裡頭有哪些值，並將資料轉換成數值型。
+						</h2>
+						<div class="article_code">
+							unique(Titanic_train[c("Sex")]) <br/>
+							Titanic_train$Sex_factors <- as.numeric(factor(Titanic_train$Sex))
+						</div><br/>
+						<img src="images/feature_02.png" style="width: 500px;"><br/><br/>
+						<div class="article_comment">
+							「Sex」欄位有 [‘male’, ‘female’] → 「Sex_factors」欄位 [2, 1]
+						</div>
+
+						<hr>
+						
+						<h2 class="article_head">
+							③　查看「Embarked」(出發港口)欄位裡頭有哪些值，並將資料轉換成數值型。
+						</h2>
+						<div class="article_code">
+							unique(Titanic_train[c("Embarked")]) <br/>
+							Titanic_train$Embarked_factors <- as.numeric(factor(Titanic_train$Embarked))
+						</div><br/>
+						<img src="images/feature_03.png" style="width: 500px;"><br/><br/>
+						<div class="article_comment">
+							「Embarked」欄位有 [‘S’, ‘C’,‘Q’] - > 「Embarked_factors」欄位 [3,1,2]
+						</div>
+
+						<hr>
+						
+						<h2 class="article_head">
+							④　確認資料都是數值型。
+						</h2>
+						<div class="article_code">
+							str(Titanic_train_subset)
+						</div><br/>
+						<img src="images/feature_04.png" style="width: 500px;"><br/><br/>
+						<div class="article_comment">
+							目前欄位都為數值型資料
+						</div>
+					</article>
+
+					<a name="Section3"></a>
+					<article class="post">
+						<header>
+							<div class="title">
+								<h2>Scaling</h2>
+							</div>
+						</header>
+						<h2 class="article_head">
+							①　對feature資料進行z-score 標準化。(平均值為0，標準差為1)
+						</h2>
+							因為在資料中，不同資料欄位與資料值所組成，他們分佈狀況可能都不盡相同，因此，就必須將特徵資料按比例縮放，讓資料落在某一特定的區間。<br/>
+						<div class="article_code">
+							Titanic_train_subset_scale <- Titanic_train_subset <br/>
+							Titanic_train_subset_scale[2 : 8] <- as.data.frame(scale(Titanic_train_subset_scale[2 : 8]))
+						</div><br/>
+						<h2 class="article_head">
+							②　確認資料都是已經scaling。
+						</h2>
+						<div class="article_code">
+							head(Titanic_train_subset_scale)
+						</div><br/>
+						<img src="images/feature_05.png" style="width: 500px;"><br/><br/>
+						<div class="article_comment">
+							目前欄位都為數值型資料
+						</div>
+					</article>
+				</div>
+				<!-- Sidebar -->
+				<section id="sidebar" style="position: fixed;left: 6em;">
+					<!-- Posts List -->
+						<section>
+							<ul class="posts">
+								<li>
+									<article><header><h3><a href="#Section1">Missing data</a></h3></header></article>
+								</li>
+								<li>
+									<article><header><h3><a href="#Section2">Label encoding</a></h3></header></article>
+								</li>
+								<li>
+									<article><header><h3><a href="#Section3">Scaling</a></h3></header></article>
+								</li>
+							</ul>
+						</section>
+				</section>
+			</div>
+
+	</body>
+</html>
